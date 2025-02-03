@@ -9,10 +9,6 @@
     <meta name="author" content="Antt1995, antt1995@antts.uk">
     <meta name="abuseipdb-verification" content="jhfQynTo">
 
-    <!-- Theme CSS -->
-    <link rel="preload" as="style" href="/assets/style.min.css">
-    <link rel="stylesheet" type="text/css" href="/assets/style.min.css" media="screen">
-
     <!-- Favicon -->
     <link rel="icon" type="image/png" sizes="32x32" href="https://antts.s3.eu-west-2.amazonaws.com/logos/favicon-32x32.png">
     <link rel="icon" type="image/png" sizes="16x16" href="https://antts.s3.eu-west-2.amazonaws.com/logos/favicon-32x32.png">
@@ -30,11 +26,16 @@
         }
         /* Add more styles as needed */
     </style>
-    <script defer type="text/javascript" src="assets/javascript.js"></script>
+    <script src="myth.js"></script>
 </head>
 <body oncontextmenu="return false;">
+	<script>
+		document.addEventListener("DOMContentLoaded", function() {
+			Myth.init();
+		});
+	</script>
     <!-- Background -->
-    <canvas id="synthetic"></canvas>
+    <canvas id="myth"></canvas>
     <div id="logo">
         <img src="https://antts.s3.eu-west-2.amazonaws.com/logos/FullLogo_Transparent(1).webp" alt="logo" class="center">
     </div>
