@@ -26,6 +26,9 @@
             padding: 0;
             overflow: hidden;
         }
+        canvas {
+            display: block;
+        }
     </style>
 </head>
 <body oncontextmenu="return false;">
@@ -115,7 +118,8 @@
             }
 
             init() {
-                window.addEventListener('DOMContentLoaded', () => this.drawSynthetic());
+                this.drawSynthetic();
+                window.addEventListener('resize', () => this.drawSynthetic());
             }
         }
 
@@ -158,8 +162,8 @@
                 static initialize() {
                     Logger.log(`╭─────────────────────────────────╮\n│                                 │\n│           Hello World           │\n│                                 │\n╰─────────────────────────────────╯`);
 
-                    if (typeof Synthetic !== 'undefined' && typeof Synthetic.init === 'function') {
-                        Synthetic.init();
+                    if (typeof synthetic !== 'undefined' && typeof synthetic.init === 'function') {
+                        synthetic.init();
                     }
 
                     const footerText = DOMHelper.select('footer small');
