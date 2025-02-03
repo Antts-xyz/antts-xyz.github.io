@@ -9,113 +9,104 @@
     <meta name="author" content="Antt1995, antt1995@antts.uk">
     <meta name="abuseipdb-verification" content="jhfQynTo">
 
+    <!-- Theme CSS -->
+    <link rel="preload" as="style" href="/assets/style.min.css">
+    <link rel="stylesheet" type="text/css" href="/assets/style.min.css" media="screen">
+
     <!-- Favicon -->
     <link rel="icon" type="image/png" sizes="32x32" href="https://antts.s3.eu-west-2.amazonaws.com/logos/favicon-32x32.png">
     <link rel="icon" type="image/png" sizes="16x16" href="https://antts.s3.eu-west-2.amazonaws.com/logos/favicon-32x32.png">
     <link rel="shortcut icon" href="https://antts.s3.eu-west-2.amazonaws.com/logos/favicon-32x32.png">
     <meta name="theme-color" content="#ffffff">
-        <style>
-        body, html {
+
+    <!-- Style -->
+    <style type="text/css">
+        body {
             margin: 0;
             padding: 0;
             overflow: hidden;
-            height: 100%;
-            width: 100%;
-        }
-        #myth {
-            display: block;
-            position: absolute;
-            top: 0;
-            left: 0;
         }
     </style>
 </head>
 <body oncontextmenu="return false;">
-    <canvas id="myth"></canvas>
+    <!-- Background -->
+    <canvas id="synthetic"></canvas>
     <script>
-        (function(root, factory) {
-            if (typeof define === 'function' && define.amd) {
-                define([], function() {
-                    return factory(root);
-                });
-            } else if (typeof exports === 'object') {
-                module.exports = factory(root);
-            } else {
-                root.myth = factory(root);
-            }
-        })(typeof global !== 'undefined' ? global : typeof window !== 'undefined' ? window : this, function(window) {
-
-            'use strict';
-
-            let rndColor = [],
-            colors = ["#0F0F0F", "#090909", "#0B0B0B", "#0D0D0D"],
-            seed = 5309,
-            canvas;
-
-            function sRnd(max) {
-                seed = (seed * 9301 + 49297) % 233280;
-                var rnd = seed / 233280;
-                return (rnd * max) << 0;
+        class Synthetic {
+            constructor() {
+                this.colors = ["#0F0F0F", "#090909", "#0B0B0B", "#0D0D0D"];
+                this.seed = 5309;
+                this.canvas = document.getElementById('synthetic');
+                this.rndColor = this.loadColors();
             }
 
-            function drawMyth() {
-                var hex = {
-                    angle: 0.523,
-                    sideLength: 20,
-                    boardWidth: 400,
-                    boardHeight: 600
-                };
+            loadColors() {
+                let storedColors = localStorage.getItem('synthetic');
+                if (storedColors) {
+                    return JSON.parse(storedColors);
+                }
 
-                hex.height = Math.sin(hex.angle) * hex.sideLength;
-                hex.radius = Math.cos(hex.angle) * hex.sideLength;
-                hex.rectangleHeight = (hex.sideLength + 2 * hex.height);
-                hex.rectangleWidth = (2 * hex.radius);
+                let randomColors = [];
+                for (let i = 0; i < 5000; ++i) {
+                    randomColors.push(this.colors[this.randomIndex(this.colors.length)]);
+                }
+                localStorage.setItem('synthetic', JSON.stringify(randomColors));
+                return randomColors;
+            }
 
-                canvas.width = document.body.clientWidth > 2560 ? document.body.clientWidth : 2560;
-                canvas.height = document.body.clientHeight > 1440 ? document.body.clientHeight : 1440;
+            randomIndex(max) {
+                this.seed = (this.seed * 9301 + 49297) % 233280;
+                return Math.floor(this.seed / 233280 * max);
+            }
 
-                canvas.width += (hex.rectangleWidth * 2);
-                canvas.height += (hex.rectangleHeight * 2);
+            drawSynthetic() {
+                if (!this.canvas) return;
 
-                var boardWidth = canvas.width / hex.height,
-                boardHeight = canvas.height / hex.height;
+                const hex = this.calculateHexDimensions();
+                this.canvas.width = Math.max(window.innerWidth, 2560) + (hex.rectangleWidth * 2);
+                this.canvas.height = Math.max(window.innerHeight, 1440) + (hex.rectangleHeight * 2);
 
-                if (canvas.getContext) {
-                    var ctx = canvas.getContext('2d');
-                    ctx.lineWidth = 1;
-                    ctx.strokeStle = 'rgba(0,0,0)';
-                    drawBoard(ctx, boardWidth, boardHeight, hex);
+                const ctx = this.canvas.getContext('2d');
+                if (ctx) {
+                    this.drawBoard(ctx, hex);
                 }
             }
 
-            function drawBoard(ctx, width, height, hex) {
-                var x,
-                y,
-                i = 0,
-                gradientX = 255 / width,
-                gradientY = 255 / height;
+            calculateHexDimensions() {
+                const angle = 0.523; // 30 degrees in radians
+                const sideLength = 20;
+                const height = Math.sin(angle) * sideLength;
+                const radius = Math.cos(angle) * sideLength;
+                const rectangleHeight = sideLength + 2 * height;
+                const rectangleWidth = 2 * radius;
 
-                for (x = 0; x < width; ++x) {
-                    for (y = 0; y < height; ++y) {
-                        ctx.fillStyle = rndColor[(++i) % rndColor.length];
-                        draw(
-                            ctx,
-                            (x * 1.02) * hex.rectangleWidth + ((y % 2) * hex.radius),
-                            (y * 1.02) * (hex.sideLength + hex.height),
-                            hex
-                        );
+                return { height, radius, rectangleHeight, rectangleWidth, sideLength };
+            }
+
+            drawBoard(ctx, hex) {
+                const boardWidth = this.canvas.width / hex.height;
+                const boardHeight = this.canvas.height / hex.height;
+                let i = 0;
+
+                for (let x = 0; x < boardWidth; ++x) {
+                    for (let y = 0; y < boardHeight; ++y) {
+                        ctx.fillStyle = this.rndColor[(++i) % this.rndColor.length];
+                        this.drawHex(ctx, x, y, hex);
                     }
                 }
             }
 
-            function draw(ctx, x, y, hex) {
+            drawHex(ctx, x, y, hex) {
+                const xPos = (x * 1.02) * hex.rectangleWidth + ((y % 2) * hex.radius);
+                const yPos = (y * 1.02) * (hex.sideLength + hex.height);
+
                 ctx.beginPath();
-                ctx.moveTo(x + hex.radius, y);
-                ctx.lineTo(x + hex.rectangleWidth, y + hex.height);
-                ctx.lineTo(x + hex.rectangleWidth, y + hex.height + hex.sideLength);
-                ctx.lineTo(x + hex.radius, y + hex.rectangleHeight);
-                ctx.lineTo(x, y + hex.sideLength + hex.height);
-                ctx.lineTo(x, y + hex.height);
+                ctx.moveTo(xPos + hex.radius, yPos);
+                ctx.lineTo(xPos + hex.rectangleWidth, yPos + hex.height);
+                ctx.lineTo(xPos + hex.rectangleWidth, yPos + hex.height + hex.sideLength);
+                ctx.lineTo(xPos + hex.radius, yPos + hex.rectangleHeight);
+                ctx.lineTo(xPos, yPos + hex.sideLength + hex.height);
+                ctx.lineTo(xPos, yPos + hex.height);
                 ctx.closePath();
                 ctx.globalAlpha = 1;
                 ctx.fill();
@@ -123,34 +114,63 @@
                 ctx.stroke();
             }
 
-            const myth = {
-                init: function(options) {
-                    rndColor = localStorage.getItem('myth');
-                    if (!rndColor || typeof(rndColor) !== 'string') {
-                        rndColor = [];
-                        for (var i = 0; i < 5000; ++i) {
-                            rndColor.push(colors[sRnd(4)]);
-                        }
-                        localStorage.setItem('myth', JSON.stringify(rndColor));
-                    } else {
-                        rndColor = JSON.parse(rndColor);
-                    }
-                    canvas = document.getElementById('myth');
-                    drawMyth();
-                }
-            };
+            init() {
+                window.addEventListener('DOMContentLoaded', () => this.drawSynthetic());
+            }
+        }
 
-            return myth;
-
-        });
-
-        // Initialize the myth module
-        window.onload = function() {
-            myth.init();
-        };
+        const synthetic = new Synthetic();
+        synthetic.init();
     </script>
     <div id="logo">
         <img src="https://antts.s3.eu-west-2.amazonaws.com/logos/FullLogo_Transparent(1).webp" alt="logo" class="center">
     </div>
+    <footer>
+        <small></small>
+    </footer>
+    <script>
+        document.addEventListener("DOMContentLoaded", () => {
+            'use strict';
+
+            class Logger {
+                static log(message) {
+                    console.log(message);
+                }
+            }
+
+            class DOMHelper {
+                static select(selector) {
+                    return document.querySelector(selector);
+                }
+
+                static selectAll(selector) {
+                    return document.querySelectorAll(selector);
+                }
+
+                static updateTextContent(element, text) {
+                    if (element) {
+                        element.innerText = text;
+                    }
+                }
+            }
+
+            class Application {
+                static initialize() {
+                    Logger.log(`╭─────────────────────────────────╮\n│                                 │\n│           Hello World           │\n│                                 │\n╰─────────────────────────────────╯`);
+
+                    if (typeof Synthetic !== 'undefined' && typeof Synthetic.init === 'function') {
+                        Synthetic.init();
+                    }
+
+                    const footerText = DOMHelper.select('footer small');
+                    const currentYear = new Date().getFullYear();
+                    const copyrightText = `Copyright ${currentYear}, Antt1995`;
+                    DOMHelper.updateTextContent(footerText, copyrightText);
+                }
+            }
+
+            Application.initialize();
+        });
+    </script>
 </body>
 </html>
