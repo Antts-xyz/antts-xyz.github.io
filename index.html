@@ -14,29 +14,141 @@
     <link rel="icon" type="image/png" sizes="16x16" href="https://antts.s3.eu-west-2.amazonaws.com/logos/favicon-32x32.png">
     <link rel="shortcut icon" href="https://antts.s3.eu-west-2.amazonaws.com/logos/favicon-32x32.png">
     <meta name="theme-color" content="#ffffff">
-
-    <!-- Style -->
-    <style type="text/css">
-        /* Include your embedded CSS styles here */
-        /* Example styles */
-        body {
+        <style>
+        body, html {
             margin: 0;
             padding: 0;
             overflow: hidden;
+            height: 100%;
+            width: 100%;
         }
-        /* Add more styles as needed */
+        #myth {
+            display: block;
+            position: absolute;
+            top: 0;
+            left: 0;
+        }
     </style>
-    
 </head>
 <body oncontextmenu="return false;">
-    <!-- Background -->
     <canvas id="myth"></canvas>
-    <script src="myth.js"></script>
-	<script>
-		document.addEventListener("DOMContentLoaded", function() {
-			Myth.init();
-		});
-	</script>
+    <script>
+        (function(root, factory) {
+            if (typeof define === 'function' && define.amd) {
+                define([], function() {
+                    return factory(root);
+                });
+            } else if (typeof exports === 'object') {
+                module.exports = factory(root);
+            } else {
+                root.myth = factory(root);
+            }
+        })(typeof global !== 'undefined' ? global : typeof window !== 'undefined' ? window : this, function(window) {
+
+            'use strict';
+
+            let rndColor = [],
+            colors = ["#0F0F0F", "#090909", "#0B0B0B", "#0D0D0D"],
+            seed = 5309,
+            canvas;
+
+            function sRnd(max) {
+                seed = (seed * 9301 + 49297) % 233280;
+                var rnd = seed / 233280;
+                return (rnd * max) << 0;
+            }
+
+            function drawMyth() {
+                var hex = {
+                    angle: 0.523,
+                    sideLength: 20,
+                    boardWidth: 400,
+                    boardHeight: 600
+                };
+
+                hex.height = Math.sin(hex.angle) * hex.sideLength;
+                hex.radius = Math.cos(hex.angle) * hex.sideLength;
+                hex.rectangleHeight = (hex.sideLength + 2 * hex.height);
+                hex.rectangleWidth = (2 * hex.radius);
+
+                canvas.width = document.body.clientWidth > 2560 ? document.body.clientWidth : 2560;
+                canvas.height = document.body.clientHeight > 1440 ? document.body.clientHeight : 1440;
+
+                canvas.width += (hex.rectangleWidth * 2);
+                canvas.height += (hex.rectangleHeight * 2);
+
+                var boardWidth = canvas.width / hex.height,
+                boardHeight = canvas.height / hex.height;
+
+                if (canvas.getContext) {
+                    var ctx = canvas.getContext('2d');
+                    ctx.lineWidth = 1;
+                    ctx.strokeStle = 'rgba(0,0,0)';
+                    drawBoard(ctx, boardWidth, boardHeight, hex);
+                }
+            }
+
+            function drawBoard(ctx, width, height, hex) {
+                var x,
+                y,
+                i = 0,
+                gradientX = 255 / width,
+                gradientY = 255 / height;
+
+                for (x = 0; x < width; ++x) {
+                    for (y = 0; y < height; ++y) {
+                        ctx.fillStyle = rndColor[(++i) % rndColor.length];
+                        draw(
+                            ctx,
+                            (x * 1.02) * hex.rectangleWidth + ((y % 2) * hex.radius),
+                            (y * 1.02) * (hex.sideLength + hex.height),
+                            hex
+                        );
+                    }
+                }
+            }
+
+            function draw(ctx, x, y, hex) {
+                ctx.beginPath();
+                ctx.moveTo(x + hex.radius, y);
+                ctx.lineTo(x + hex.rectangleWidth, y + hex.height);
+                ctx.lineTo(x + hex.rectangleWidth, y + hex.height + hex.sideLength);
+                ctx.lineTo(x + hex.radius, y + hex.rectangleHeight);
+                ctx.lineTo(x, y + hex.sideLength + hex.height);
+                ctx.lineTo(x, y + hex.height);
+                ctx.closePath();
+                ctx.globalAlpha = 1;
+                ctx.fill();
+                ctx.globalAlpha = 0.2;
+                ctx.stroke();
+            }
+
+            const myth = {
+                init: function(options) {
+                    rndColor = localStorage.getItem('myth');
+                    if (!rndColor || typeof(rndColor) !== 'string') {
+                        rndColor = [];
+                        for (var i = 0; i < 5000; ++i) {
+                            rndColor.push(colors[sRnd(4)]);
+                        }
+                        localStorage.setItem('myth', JSON.stringify(rndColor));
+                    } else {
+                        rndColor = JSON.parse(rndColor);
+                    }
+                    canvas = document.getElementById('myth');
+                    drawMyth();
+                }
+            };
+
+            return myth;
+
+        });
+
+        // Initialize the myth module
+        window.onload = function() {
+            myth.init();
+        };
+    </script>
     <div id="logo">
         <img src="https://antts.s3.eu-west-2.amazonaws.com/logos/FullLogo_Transparent(1).webp" alt="logo" class="center">
     </div>
